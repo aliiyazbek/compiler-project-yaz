@@ -1,4 +1,5 @@
 // Generated from src/antlr/frontend/FrontendLexer.g4 by ANTLR 4.13.2
+package antlr.frontend;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
