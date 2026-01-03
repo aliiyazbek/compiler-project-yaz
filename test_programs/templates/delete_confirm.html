@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Delete Member Compiler Team</title>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<header>
+<div class="header">
+<h1>Compiler Team</h1>
+<span class="tagline">Delete Member</span>
+</div>
+<nav>
+<a href="/">Home</a>
+<a href="/add">Add Member</a>
+</nav>
+</header>
+<section class="main">
+<div class="formcontainer">
+<h1>Delete Member</h1>
+<p>Are you sure you want to delete {{ product.name }}?</p>
+<div class="memberinfo">
+<p>Member Name {{ product.name }}</p>
+<p>Member Details {{ product.details }}</p>
+</div>
+<div class="formactions">
+<form method="POST" action="/confirm-delete/{{ product.id }}">
+<button type="submit" class="btndanger">Yes Delete</button>
+</form>
+<a href="/product/{{ product.id }}" class="btnsecondary">Cancel</a>
+</div>
+</div>
+</section>
+<footer>
+<p>Compiler Team 2025</p>
+</footer>
+</body>
+</html>
