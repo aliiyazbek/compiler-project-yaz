@@ -1,0 +1,313 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+    color: #333333;
+}
+
+header {
+    background: #2c3e50;
+    padding: 20px;
+}
+
+.header {
+    color: #ffffff;
+}
+
+.header h1 {
+    color: #ffffff;
+    margin: 0;
+}
+
+.tagline {
+    color: #95a5a6;
+}
+
+nav {
+    background: #34495e;
+    padding: 10px;
+}
+
+nav a {
+    color: #ffffff;
+    padding: 12px;
+    margin: 5px;
+    text-decoration: none;
+    background: #2c3e50;
+}
+
+.main {
+    padding: 40px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.pageheader {
+    text-align: center;
+    margin: 40px;
+    padding: 20px;
+    background: #ffffff;
+}
+
+.pageheader h1 {
+    color: #2c3e50;
+    margin: 10px;
+}
+
+.pageheader p {
+    color: #7f8c8d;
+}
+
+.productcount {
+    background: #3498db;
+    color: #ffffff;
+    padding: 15px;
+    margin: 20px;
+}
+
+.countlabel {
+    color: #ffffff;
+}
+
+.countvalue {
+    color: #ffffff;
+    font-size: 24px;
+}
+
+.productsgrid {
+    display: flex;
+    justify-content: center;
+}
+
+.productcard {
+    background: #ffffff;
+    margin: 15px;
+    width: 300px;
+    padding: 0;
+    border: 2px;
+    border-color: #ecf0f1;
+}
+
+.productimage {
+    background: #ecf0f1;
+    height: 250px;
+    padding: 20px;
+}
+
+.productimage img {
+    width: 100%;
+    height: 200px;
+}
+
+.productinfo {
+    padding: 20px;
+}
+
+.productname {
+    color: #2c3e50;
+    margin: 10px;
+}
+
+.productdetails {
+    color: #7f8c8d;
+    margin: 10px;
+}
+
+.productfooter {
+    padding: 10px;
+}
+
+.productprice {
+    color: #3498db;
+    font-size: 24px;
+}
+
+.btndetails {
+    background: #3498db;
+    color: #ffffff;
+    padding: 12px;
+    text-decoration: none;
+    margin: 10px;
+}
+
+.btnprimary {
+    background: #3498db;
+    color: #ffffff;
+    padding: 15px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btnsecondary {
+    background: #95a5a6;
+    color: #ffffff;
+    padding: 12px;
+    text-decoration: none;
+}
+
+.btndanger {
+    background: #e74c3c;
+    color: #ffffff;
+    padding: 12px;
+    text-decoration: none;
+    margin: 10px;
+}
+
+.ctasection {
+    background: #ffffff;
+    padding: 40px;
+    text-align: center;
+    margin: 40px;
+}
+
+.ctasection h2 {
+    color: #2c3e50;
+    margin: 10px;
+}
+
+.ctasection p {
+    color: #7f8c8d;
+    margin: 20px;
+}
+
+.productdetail {
+    background: #ffffff;
+    padding: 40px;
+    max-width: 800px;
+    margin: auto;
+}
+
+.productdetail .productimage {
+    background: #ecf0f1;
+    padding: 20px;
+    text-align: center;
+    margin: 20px;
+    overflow: hidden;
+}
+
+.productdetail .productimage img {
+    width: 250px;
+    height: 250px;
+    max-width: 100%;
+}
+
+.productdetail .productinfo {
+    padding: 30px;
+}
+
+.productdetail .productinfo h1 {
+    color: #2c3e50;
+    margin: 20px;
+    font-size: 32px;
+}
+
+.productdetail .productinfo p {
+    color: #7f8c8d;
+    margin: 20px;
+    font-size: 18px;
+}
+
+.pricebox {
+    background: #3498db;
+    color: #ffffff;
+    padding: 20px;
+    margin: 20px;
+}
+
+.pricelabel {
+    color: #ffffff;
+}
+
+.pricevalue {
+    color: #ffffff;
+    font-size: 24px;
+}
+
+.productmeta {
+    padding: 10px;
+    background: #ecf0f1;
+    margin: 10px;
+}
+
+.metalabel {
+    color: #7f8c8d;
+}
+
+.metavalue {
+    color: #2c3e50;
+}
+
+.productactions {
+    padding: 20px;
+}
+
+.formcontainer {
+    background: #ffffff;
+    padding: 40px;
+    max-width: 600px;
+}
+
+.formcontainer h1 {
+    color: #2c3e50;
+    margin: 10px;
+}
+
+.formcontainer p {
+    color: #7f8c8d;
+    margin: 20px;
+}
+
+.formgroup {
+    margin: 20px;
+}
+
+.formgroup label {
+    color: #2c3e50;
+    margin: 10px;
+}
+
+.formgroup input {
+    width: 100%;
+    padding: 10px;
+    border: 2px;
+}
+
+.formactions {
+    padding: 20px;
+}
+
+.successmessage {
+    background: #27ae60;
+    color: #ffffff;
+    padding: 15px;
+    margin: 20px;
+}
+
+footer {
+    background: #2c3e50;
+    color: #ffffff;
+    padding: 40px;
+}
+
+.footerbox {
+    padding: 20px;
+}
+
+.footerbox h3 {
+    color: #ffffff;
+    margin: 10px;
+}
+
+.footerbox p {
+    color: #95a5a6;
+    margin: 10px;
+}
+
+.footerbottom {
+    padding: 20px;
+    text-align: center;
+}
+
+.footerbottom p {
+    color: #7f8c8d;
+}
