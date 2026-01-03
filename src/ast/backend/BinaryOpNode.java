@@ -1,7 +1,7 @@
 package ast.backend;
 
 public class BinaryOpNode extends ExpressionNode {
-    private String operator;
+    private final String operator;
 
     public BinaryOpNode(int lineNumber, String operator) {
         super("BinaryOperation", lineNumber);

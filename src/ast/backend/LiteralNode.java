@@ -1,8 +1,8 @@
 package ast.backend;
 
 public class LiteralNode extends ExpressionNode {
-    private String value;
-    private String type; // string, integer, float, boolean, none
+    private final String value;
+    private final String type; // string, integer, float, boolean, none
 
     public LiteralNode(int lineNumber, String value, String type) {
         super("Literal", lineNumber);

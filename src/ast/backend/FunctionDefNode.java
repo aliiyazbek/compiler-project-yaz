@@ -5,8 +5,8 @@ import ast.base.ASTNode;
 import java.util.List;
 
 public class FunctionDefNode extends ASTNode {
-    private String functionName;
-    private List<String> parameters;
+    private final String functionName;
+    private final List<String> parameters;
 
     public FunctionDefNode(int lineNumber, String functionName, List<String> parameters) {
         super("FunctionDefinition", lineNumber);
