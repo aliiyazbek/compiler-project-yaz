@@ -1,7 +1,7 @@
 package ast.backend;
 
 public class FunctionCallNode extends ExpressionNode {
-    private String functionName;
+    private final String functionName;
 
     public FunctionCallNode(int lineNumber, String functionName) {
         super("FunctionCall", lineNumber);

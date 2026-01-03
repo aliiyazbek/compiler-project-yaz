@@ -3,7 +3,7 @@ package ast.backend;
 import ast.base.ASTNode;
 
 public class AssignmentNode extends ASTNode {
-    private String variableName;
+    private final String variableName;
 
     public AssignmentNode(int lineNumber, String variableName) {
         super("Assignment", lineNumber);

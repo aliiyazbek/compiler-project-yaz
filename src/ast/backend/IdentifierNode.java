@@ -1,7 +1,7 @@
 package ast.backend;
 
 public class IdentifierNode extends ExpressionNode {
-    private String name;
+    private final String name;
 
     public IdentifierNode(int lineNumber, String name) {
         super("Identifier", lineNumber);

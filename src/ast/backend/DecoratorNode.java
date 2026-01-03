@@ -3,7 +3,7 @@ package ast.backend;
 import ast.base.ASTNode;
 
 public class DecoratorNode extends ASTNode {
-    private String decoratorExpression;
+    private final String decoratorExpression;
 
     public DecoratorNode(int lineNumber, String decoratorExpression) {
         super("Decorator", lineNumber);

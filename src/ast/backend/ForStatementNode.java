@@ -3,7 +3,7 @@ package ast.backend;
 import ast.base.ASTNode;
 
 public class ForStatementNode extends ASTNode {
-    private String iteratorVariable;
+    private final String iteratorVariable;
 
     public ForStatementNode(int lineNumber, String iteratorVariable) {
         super("ForStatement", lineNumber);

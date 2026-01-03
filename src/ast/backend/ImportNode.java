@@ -5,8 +5,8 @@ import ast.base.ASTNode;
 import java.util.List;
 
 public class ImportNode extends ASTNode {
-    private String moduleName;
-    private List<String> importedItems;
+    private final String moduleName;
+    private final List<String> importedItems;
 
     public ImportNode(int lineNumber, String moduleName, List<String> importedItems) {
         super("ImportStatement", lineNumber);
