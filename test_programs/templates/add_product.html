@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Member Compiler Team</title>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<header>
+<div class="header">
+<h1>Compiler Team</h1>
+<span class="tagline">Add New Member</span>
+</div>
+<nav>
+<a href="/">Home</a>
+<a href="/add">Add Member</a>
+</nav>
+</header>
+<section class="main">
+<div class="formcontainer">
+<h1>Add New Member</h1>
+<p>Fill out the details below to add a new member</p>
+{% if success %}
+<div class="successmessage">
+<p>Member added successfully</p>
+</div>
+{% endif %}
+<form method="POST" action="/add">
+<div class="formgroup">
+<label>Member Name</label>
+<input type="text" name="name" placeholder="Enter member name"></input>
+</div>
+<div class="formgroup">
+<label>Image URL</label>
+<input type="text" name="image" placeholder="Enter image filename"></input>
+</div>
+<div class="formgroup">
+<label>Details</label>
+<input type="text" name="details" placeholder="Enter member details"></input>
+</div>
+<div class="formactions">
+<button type="submit" class="btnprimary">Add Member</button>
+<a href="/" class="btnsecondary">Cancel</a>
+</div>
+</form>
+</div>
+</section>
+<footer>
+<p>Compiler Team 2025</p>
+</footer>
+</body>
+</html>
