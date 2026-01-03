@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ product.name }} Compiler Team</title>
+    <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<header>
+    <div class="header">
+        <h1>Compiler Team</h1>
+        <span class="tagline">Team Member Profile</span>
+    </div>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/add">Add Member</a>
+    </nav>
+</header>
+<section class="main">
+    <div class="productdetail">
+        <div class="productimage">
+            <img src="/static/{{ product.image }}" alt="{{ product.name }}"/>
+        </div>
+        <div class="productinfo">
+            <h1 class="productname">{{ product.name }}</h1>
+            <p class="productdescription">{{ product.details }}</p>
+            <div class="productmeta">
+                <span class="metalabel">Member ID</span>
+                <span class="metavalue">{{ product.id }}</span>
+            </div>
+            <div class="productactions">
+                <a href="/" class="btnprimary">Back to Team</a>
+                <a href="/delete/{{ product.id }}" class="btndanger">Delete Member</a>
+            </div>
+        </div>
+    </div>
+</section>
+<footer>
+    <p>Compiler Team 2025</p>
+</footer>
+</body>
+</html>

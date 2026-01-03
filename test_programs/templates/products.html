@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Compiler Team Our Team</title>
+    <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<header>
+    <div class="header">
+        <h1>Compiler Team</h1>
+        <span class="tagline">Our Team</span>
+    </div>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/add">Add Member</a>
+    </nav>
+</header>
+<section class="main">
+    <div class="pageheader">
+        <h1>Our Team</h1>
+        <p>Meet our talented team members</p>
+        <div class="productcount">
+            <span class="countlabel">Total Members</span>
+            <span class="countvalue">{{ total }}</span>
+        </div>
+    </div>
+    <div class="productsgrid">
+        {% for product in products %}
+        {% if product.name %}
+        <div class="productcard">
+            <div class="productimage">
+                <img src="/static/{{ product.image }}" alt="{{ product.name }}"/>
+            </div>
+            <div class="productinfo">
+                <h2 class="productname">{{ product.name }}</h2>
+                <p class="productdetails">{{ product.details }}</p>
+                <div class="productfooter">
+                    <a href="/product/{{ product.id }}" class="btndetails">View Profile</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <div class="ctasection">
+        <h2>Want to join our team?</h2>
+        <p>We are always seeking talented people</p>
+        <a href="/add" class="btnprimary">Add Member</a>
+    </div>
+</section>
+<footer>
+    <div class="footerbox">
+        <h3>Compiler Team</h3>
+        <p>Building amazing products together</p>
+    </div>
+    <div class="footerbottom">
+        <p>Compiler Team 2025 All Rights</p>
+    </div>
+</footer>
+</body>
+</html>
