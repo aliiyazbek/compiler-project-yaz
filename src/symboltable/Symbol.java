@@ -4,7 +4,7 @@ package symboltable;
 public class Symbol {
     private final String name;
     private final String type;
-    private final String dataType;
+    private String dataType;
     private final int lineNumber;
     private final String scope;
 
@@ -26,6 +26,11 @@ public class Symbol {
 
     public String getDataType() {
         return dataType;
+    }
+
+    /** Allows the type-inference pass to refine a symbol's data type after declaration. */
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
     }
 
     public int getLineNumber() {
