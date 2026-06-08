@@ -4,6 +4,7 @@ import antlr.backend.*;
 import ast.backend.*;
 import ast.base.ASTNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+import symboltable.Symbol;
 import symboltable.SymbolTable;
 
 import java.util.ArrayList;
@@ -54,14 +55,15 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
         int line = ctx.start.getLine();
         String varName = ctx.IDENTIFIER().getText();
 
-        symbolTable.addSymbol(varName, "variable", "unknown", line);
-
         AssignmentNode assignNode = new AssignmentNode(line, varName);
 
         ASTNode exprNode = visit(ctx.expression());
         if (exprNode != null) {
             assignNode.addChild(exprNode);
         }
+
+        // Infer the variable's data type from its initializer expression.
+        symbolTable.addSymbol(varName, "variable", inferType(exprNode), line);
 
         return assignNode;
     }
@@ -127,19 +129,71 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
         int line = ctx.start.getLine();
         IfStatementNode ifNode = new IfStatementNode(line);
 
-        ASTNode condition = visit(ctx.expression());
-        if (condition != null) {
-            ifNode.addChild(condition);
+        // Condition wrapped so it is distinct from the body.
+        ConditionNode condNode = new ConditionNode(line);
+        ASTNode condExpr = visit(ctx.expression());
+        if (condExpr != null) {
+            condNode.addChild(condExpr);
+        }
+        ifNode.addChild(condNode);
+
+        // "then" body.
+        ifNode.addChild(buildBlock(line, "then", ctx.statement()));
+
+        // elif branches, each with its own condition + body.
+        for (PythonFlaskParser.ElifStatementContext elifCtx : ctx.elifStatement()) {
+            ASTNode elifNode = visit(elifCtx);
+            if (elifNode != null) {
+                ifNode.addChild(elifNode);
+            }
         }
 
-        for (PythonFlaskParser.StatementContext stmtCtx : ctx.statement()) {
-            ASTNode stmtNode = visit(stmtCtx);
-            if (stmtNode != null) {
-                ifNode.addChild(stmtNode);
+        // optional else branch.
+        if (ctx.elseStatement() != null) {
+            ASTNode elseNode = visit(ctx.elseStatement());
+            if (elseNode != null) {
+                ifNode.addChild(elseNode);
             }
         }
 
         return ifNode;
+    }
+
+    @Override
+    public ASTNode visitElifStatement(PythonFlaskParser.ElifStatementContext ctx) {
+        int line = ctx.start.getLine();
+        ElifBranchNode elifNode = new ElifBranchNode(line);
+
+        ConditionNode condNode = new ConditionNode(line);
+        ASTNode condExpr = visit(ctx.expression());
+        if (condExpr != null) {
+            condNode.addChild(condExpr);
+        }
+        elifNode.addChild(condNode);
+        elifNode.addChild(buildBlock(line, "body", ctx.statement()));
+
+        return elifNode;
+    }
+
+    @Override
+    public ASTNode visitElseStatement(PythonFlaskParser.ElseStatementContext ctx) {
+        int line = ctx.start.getLine();
+        ElseBranchNode elseNode = new ElseBranchNode(line);
+        elseNode.addChild(buildBlock(line, "else", ctx.statement()));
+        return elseNode;
+    }
+
+    /** Visit a list of statements and wrap the results in a labelled BlockNode. */
+    private BlockNode buildBlock(int line, String label,
+                                 List<PythonFlaskParser.StatementContext> statements) {
+        BlockNode block = new BlockNode(line, label);
+        for (PythonFlaskParser.StatementContext stmtCtx : statements) {
+            ASTNode stmtNode = visit(stmtCtx);
+            if (stmtNode != null) {
+                block.addChild(stmtNode);
+            }
+        }
+        return block;
     }
 
     @Override
@@ -267,10 +321,16 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
         DictLiteralNode dictNode = new DictLiteralNode(line);
 
         for (PythonFlaskParser.KeyValuePairContext kvCtx : ctx.keyValuePair()) {
+            // The key is either a STRING or an IDENTIFIER token; keep it instead
+            // of dropping it. getChild(0) is the key, then COLON, then expression.
+            String key = kvCtx.getChild(0).getText();
+            DictEntryNode entry = new DictEntryNode(kvCtx.start.getLine(), key);
+
             ASTNode valueNode = visit(kvCtx.expression());
             if (valueNode != null) {
-                dictNode.addChild(valueNode);
+                entry.addChild(valueNode);
             }
+            dictNode.addChild(entry);
         }
 
         return dictNode;
@@ -297,12 +357,24 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitPositionalArgument(PythonFlaskParser.PositionalArgumentContext ctx) {
-        return visit(ctx.expression());
+        ArgumentNode argNode = new ArgumentNode(ctx.start.getLine(), null);
+        ASTNode valueNode = visit(ctx.expression());
+        if (valueNode != null) {
+            argNode.addChild(valueNode);
+        }
+        return argNode;
     }
 
     @Override
     public ASTNode visitKeywordArgument(PythonFlaskParser.KeywordArgumentContext ctx) {
-        return visit(ctx.expression());
+        // Preserve the keyword name (e.g. products=...) instead of discarding it.
+        String name = ctx.IDENTIFIER().getText();
+        ArgumentNode argNode = new ArgumentNode(ctx.start.getLine(), name);
+        ASTNode valueNode = visit(ctx.expression());
+        if (valueNode != null) {
+            argNode.addChild(valueNode);
+        }
+        return argNode;
     }
 
     @Override
@@ -395,5 +467,71 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitPrimaryExpression(PythonFlaskParser.PrimaryExpressionContext ctx) {
         return visit(ctx.primary());
+    }
+
+    /**
+     * Infer a data type for an expression's resulting AST node. This is a light,
+     * syntax-directed inference (not a full type system): it covers literals,
+     * list/dict literals, common builtins, and resolves identifiers against the
+     * symbol table so a variable copied from another takes on its type.
+     */
+    private String inferType(ASTNode node) {
+        if (node == null) {
+            return "unknown";
+        }
+
+        if (node instanceof LiteralNode) {
+            return ((LiteralNode) node).getType(); // string, integer, float, boolean, none
+        }
+        if (node instanceof ListLiteralNode) {
+            return "list";
+        }
+        if (node instanceof DictLiteralNode) {
+            return "dict";
+        }
+        if (node instanceof FunctionCallNode) {
+            return inferCallType(((FunctionCallNode) node).getFunctionName());
+        }
+        if (node instanceof IdentifierNode) {
+            Symbol resolved = symbolTable.resolve(((IdentifierNode) node).getName());
+            return resolved != null ? resolved.getDataType() : "unknown";
+        }
+        if (node instanceof BinaryOpNode) {
+            return inferBinaryType((BinaryOpNode) node);
+        }
+        return "unknown";
+    }
+
+    /** Infer the return type of a few well-known builtins, else unknown. */
+    private String inferCallType(String funcName) {
+        switch (funcName) {
+            case "len":
+                return "integer";
+            case "str":
+                return "string";
+            case "int":
+                return "integer";
+            case "float":
+                return "float";
+            case "bool":
+                return "boolean";
+            case "list":
+                return "list";
+            case "dict":
+                return "dict";
+            default:
+                return "unknown";
+        }
+    }
+
+    /** Comparison/logical operators yield booleans; otherwise fall back. */
+    private String inferBinaryType(BinaryOpNode op) {
+        switch (op.getOperator()) {
+            case "==": case "!=": case "<": case ">": case "<=": case ">=":
+            case "and": case "or":
+                return "boolean";
+            default:
+                return "unknown";
+        }
     }
 }

@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+// Java toolchain. Adjust if your JDK differs; 17+ is required.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+    // Allows resolving the vendored ANTLR runtime from dependencies/.
+    flatDir { dirs 'dependencies' }
+}
+
+dependencies {
+    // Vendored ANTLR 4.13.2 complete jar (runtime + tool).
+    implementation files('dependencies/antlr-4.13.2-complete.jar')
+    testImplementation files('dependencies/antlr-4.13.2-complete.jar')
+}
+
+// The project keeps its sources under src/ (a flat layout, not Maven's
+// src/main/java) and the generated lexers/parsers live alongside hand-written
+// code. gen/ is a stale duplicate of src/antlr and must NOT be compiled.
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+            exclude 'test/**'      // unit tests live under src/test
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test']
+        }
+    }
+}
+
+application {
+    mainClass = 'app.Main'
+}
+
+// Run from the project root so the relative test_programs/ paths resolve.
+run {
+    workingDir = projectDir
+    // Keep box-drawing / UTF-8 output readable on Windows consoles.
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
+test {
+    useJUnitPlatform()
+    workingDir = projectDir
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
+}
