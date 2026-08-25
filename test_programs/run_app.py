@@ -3,9 +3,9 @@ from flask import Flask, render_template, request, redirect
 app = Flask(__name__)
 
 products = [
-    {"id": 1, "name": "Ali Yazbek", "image": "images/ali_yazbek.jpeg", "details": "Computer Science Student"},
-    {"id": 2, "name": "Ali Suliman", "image": "images/ali_suliman.jpeg", "details": "Computer Science Student"},
-    {"id": 3, "name": "Sara Nabhan", "image": "images/sara_nabhan.jpeg", "details": "Computer Science Student"}
+    {"id": 1, "name": "Ali Yazbek", "image": "images/ali_yazbek.jpg", "details": "Computer Science Student"},
+    {"id": 2, "name": "Ali Suliman", "image": "images/ali_suliman.jpg", "details": "Computer Science Student"},
+    {"id": 3, "name": "Sara Nabhan", "image": "images/sara_nabhan.jpg", "details": "Computer Science Student"}
 ]
 
 @app.route('/')
@@ -22,13 +22,20 @@ def add_product():
     new_id = len(products) + 1
     new_product = {"id": new_id, "name": name, "image": image, "details": details}
     products.append(new_product)
-    return render_template('add_product.html', method=method)
+    success = ''
+    return render_template('add_product.html', method=method, success=success)
 
 @app.route('/product/<int:id>')
 def product_detail(id):
     index = id - 1
     product = products[index]
     return render_template('product_detail.html', product=product)
+
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit_product(id):
+    index = id - 1
+    product = products[index]
+    return render_template('edit_product.html', product=product)
 
 @app.route('/delete/<int:id>')
 def delete_product(id):

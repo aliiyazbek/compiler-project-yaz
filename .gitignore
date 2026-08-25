@@ -9,6 +9,10 @@ out/
 .antlr/
 sources.txt
 
+### Compiler output (regenerated on every run) ###
+/output/
+/compiler_output/
+
 ### Eclipse ###
 .apt_generated
 .classpath
