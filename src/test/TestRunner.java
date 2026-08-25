@@ -17,6 +17,11 @@ public class TestRunner {
             BackendAstTest.class,
             TypeInferenceTest.class,
             CompilerPipelineTest.class,
+            GeneratorTest.class,
+            CodeGenerationTest.class,
+            OutputWriterTest.class,
+            SemanticAnalyzerTest.class,
+            ServerTest.class,
     };
 
     public static void main(String[] args) {

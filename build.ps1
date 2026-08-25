@@ -5,6 +5,8 @@
 #   .\build.ps1 -Run       # same as above
 #   .\build.ps1 -NoRun     # compile only
 #   .\build.ps1 -Test      # compile main + tests and run the test runner
+#   .\build.ps1 -Serve     # compile, then run the live server (app.Serve)
+#   .\build.ps1 -Serve -Port 9090
 #
 # Compiles ONLY src/ (the gen/ directory is a stale duplicate of src/antlr and
 # is intentionally excluded).
@@ -12,7 +14,9 @@
 param(
     [switch]$NoRun,
     [switch]$Run,
-    [switch]$Test
+    [switch]$Test,
+    [switch]$Serve,
+    [int]$Port = 8080
 )
 
 # Stop on PowerShell cmdlet errors, but NOT on native tool stderr: javac/java
@@ -49,6 +53,12 @@ if ($Test) {
     }
     Write-Host "Running tests..." -ForegroundColor Cyan
     & java "-Dfile.encoding=UTF-8" -cp "$out$sep$jar" test.TestRunner
+    exit $LASTEXITCODE
+}
+
+if ($Serve) {
+    Write-Host "Starting the live server on port $Port..." -ForegroundColor Cyan
+    & java "-Dfile.encoding=UTF-8" -cp "$out$sep$jar" app.Serve $Port
     exit $LASTEXITCODE
 }
 

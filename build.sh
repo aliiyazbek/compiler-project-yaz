@@ -5,6 +5,8 @@
 #   ./build.sh           # compile, then run app.Main on the sample project
 #   ./build.sh --no-run  # compile only
 #   ./build.sh --test    # compile main + tests and run the test runner
+#   ./build.sh --serve   # compile, then run the live server (app.Serve)
+#   ./build.sh --serve --port 9090
 #
 # Compiles ONLY src/ (gen/ is a stale duplicate of src/antlr and is excluded).
 set -euo pipefail
@@ -35,11 +37,21 @@ CP_JAR="$(winpath "$JAR")"
 
 RUN=1
 TEST=0
+SERVE=0
+PORT=8080
+expect_port=0
 for arg in "$@"; do
+    if [ "$expect_port" -eq 1 ]; then
+        PORT="$arg"
+        expect_port=0
+        continue
+    fi
     case "$arg" in
         --no-run) RUN=0 ;;
         --test)   TEST=1 ;;
         --run)    RUN=1 ;;
+        --serve)  SERVE=1 ;;
+        --port)   expect_port=1 ;;
         *) echo "Unknown option: $arg" >&2; exit 2 ;;
     esac
 done
@@ -63,6 +75,12 @@ if [ "$TEST" -eq 1 ]; then
     fi
     echo "Running tests..."
     java -Dfile.encoding=UTF-8 -cp "$CP_OUT$SEP$CP_JAR" test.TestRunner
+    exit $?
+fi
+
+if [ "$SERVE" -eq 1 ]; then
+    echo "Starting the live server on port $PORT..."
+    java -Dfile.encoding=UTF-8 -cp "$CP_OUT$SEP$CP_JAR" app.Serve "$PORT"
     exit $?
 fi
 

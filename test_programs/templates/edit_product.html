@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Edit Member Compiler Team</title>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<header>
+<div class="header">
+<h1>Compiler Team</h1>
+<span class="tagline">Edit Member</span>
+</div>
+<nav>
+<a href="/">Home</a>
+<a href="/add">Add Member</a>
+</nav>
+</header>
+<section class="main">
+<div class="formcontainer">
+<h1>Edit Member</h1>
+<p>Update the details of {{ product.name }}</p>
+<form method="POST" action="/edit/{{ product.id }}">
+<div class="formgroup">
+<label>Member Name</label>
+<input type="text" name="name" value="{{ product.name }}"></input>
+</div>
+<div class="formgroup">
+<label>Image URL</label>
+<input type="text" name="image" value="{{ product.image }}"></input>
+</div>
+<div class="formgroup">
+<label>Details</label>
+<input type="text" name="details" value="{{ product.details }}"></input>
+</div>
+<div class="formactions">
+<button type="submit" class="btnprimary">Save Changes</button>
+<a href="/product/{{ product.id }}" class="btnsecondary">Cancel</a>
+</div>
+</form>
+</div>
+</section>
+<footer>
+<p>Compiler Team 2025</p>
+</footer>
+<script src="/static/script.js"></script>
+</body>
+</html>
