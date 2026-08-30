@@ -48,7 +48,7 @@ public class Main {
             for (String file : args) {
                 errors += compileByExtension(compiler, file);
             }
-            printSummary(errors);
+            exit(errors);
             return;
         }
 
@@ -86,7 +86,7 @@ public class Main {
             backend.getAst().printTree();
         }
 
-        printSummary(errors);
+        exit(errors);
     }
 
     private static int compileByExtension(Compiler compiler, String file) {
@@ -160,7 +160,7 @@ public class Main {
      * binding is visible in a dump, this stage evaluates the tree and writes files
      * to disk — output/ for the runnable app, compiler_output/ for the analysis.
      *
-     * @return 1 if writing failed, 0 otherwise
+     * @return 1 if writing failed, otherwise the semantic phase's error count
      */
     private static int runCodeGeneration(CompilationResult backend,
                                          List<CompilationResult> templates) {
@@ -185,8 +185,7 @@ public class Main {
         }
         System.out.println();
 
-        reportSemantics(driver.getAnalyzer());
-        return 0;
+        return reportSemantics(driver.getAnalyzer());
     }
 
     /**
@@ -195,19 +194,21 @@ public class Main {
      * These are not syntax errors — every file parsed. They are the checks that
      * make the phase more than a symbol-table dump: a template reading a variable
      * nobody passed it, a name used before it exists, a missing layout.
+     *
+     * @return the number of findings reported at ERROR severity
      */
-    private static void reportSemantics(SemanticAnalyzer analyzer) {
+    private static int reportSemantics(SemanticAnalyzer analyzer) {
         section("PHASE 6: SEMANTIC ANALYSIS (error checking)");
 
         if (analyzer == null) {
             System.out.println("  Skipped: nothing to analyse.\n");
-            return;
+            return 0;
         }
 
         List<Diagnostic> diagnostics = analyzer.getDiagnostics();
         if (diagnostics.isEmpty()) {
             System.out.println("  No semantic problems found.\n");
-            return;
+            return 0;
         }
 
         for (Diagnostic d : diagnostics) {
@@ -218,6 +219,7 @@ public class Main {
                 + analyzer.warningCount() + " warning(s).");
         System.out.println("  Full report: compiler_output/semantic_report.txt");
         System.out.println();
+        return (int) analyzer.errorCount();
     }
 
     /** Print one file's compilation metrics; return its syntax-error count. */
@@ -252,7 +254,11 @@ public class Main {
         System.out.println("---- " + title + " " + "-".repeat(Math.max(0, 60 - title.length())));
     }
 
-    private static void printSummary(int errors) {
+    /**
+     * Print the verdict and leave it in the process exit status, so a build
+     * script or CI step can tell a clean compile from a failed one.
+     */
+    private static void exit(int errors) {
         System.out.println("=".repeat(70));
         if (errors == 0) {
             System.out.println("  ALL PHASES PASSED - compilation succeeded with 0 errors.");
@@ -260,5 +266,6 @@ public class Main {
             System.out.println("  COMPILATION FAILED - " + errors + " error(s) found.");
         }
         System.out.println("=".repeat(70));
+        System.exit(errors == 0 ? 0 : 1);
     }
 }

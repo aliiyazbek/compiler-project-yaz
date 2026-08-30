@@ -2,8 +2,10 @@ package generator;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The value model the generator passes to the template emitter — the compiler's
@@ -109,8 +111,27 @@ public class TemplateContext {
     /** Top-level template variables, e.g. "products" and "total". */
     private final Map<String, Value> variables = new LinkedHashMap<>();
 
+    /**
+     * Every name a route hands to this template, including the ones whose value
+     * the constant folder could not work out. Rendering needs a value and so
+     * reads {@link #variables}; name resolution only needs to know the variable
+     * exists, and reading it from here is what stops an unfoldable keyword such
+     * as {@code method=request.method} being reported as never passed.
+     */
+    private final Set<String> declared = new LinkedHashSet<>();
+
     public void put(String name, Value value) {
         variables.put(name, value);
+        declared.add(name);
+    }
+
+    /** Record a name the route passes but whose value is not known at compile time. */
+    public void declare(String name) {
+        declared.add(name);
+    }
+
+    public Set<String> getDeclaredNames() {
+        return declared;
     }
 
     public Value get(String name) {
@@ -129,6 +150,7 @@ public class TemplateContext {
     public TemplateContext copy() {
         TemplateContext clone = new TemplateContext();
         clone.variables.putAll(this.variables);
+        clone.declared.addAll(this.declared);
         return clone;
     }
 

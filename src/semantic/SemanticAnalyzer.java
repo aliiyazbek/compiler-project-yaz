@@ -210,6 +210,7 @@ public class SemanticAnalyzer {
     /** Nodes that group statements rather than forming an expression. */
     private static boolean isContainer(ASTNode node) {
         return node instanceof ProgramNode
+                || node instanceof DecoratedFunctionNode
                 || node instanceof BlockNode
                 || node instanceof IfStatementNode
                 || node instanceof ElifBranchNode
@@ -356,7 +357,7 @@ public class SemanticAnalyzer {
         // Without a context there is nothing to check names against; the warning
         // above already said why, and every expression would repeat it.
         if (context != null) {
-            Set<String> inScope = new HashSet<>(context.getVariables().keySet());
+            Set<String> inScope = new HashSet<>(context.getDeclaredNames());
             walkTemplate(root, context, inScope);
         }
     }
@@ -388,8 +389,11 @@ public class SemanticAnalyzer {
             checkTemplateExpression(((JinjaExpressionNode) node).getExpressionText(),
                     node.getLineNumber(), context, inScope);
 
-        } else if (node instanceof JinjaIfNode) {
-            checkCondition(((JinjaIfNode) node).getCondition(),
+        } else if (node instanceof JinjaBranchNode) {
+            // The if's own test now lives on its first branch, so checking it
+            // here covers every arm of the chain and skips the else, which has
+            // no test of its own.
+            checkCondition(((JinjaBranchNode) node).getCondition(),
                     node.getLineNumber(), context, inScope);
 
         } else if (node instanceof JinjaForNode) {
@@ -412,7 +416,7 @@ public class SemanticAnalyzer {
         }
     }
 
-    /** {% for product in products %} — the collection must be an actual list. */
+    /** {% for product in products %} - the collection must be an actual list. */
     private void checkLoopCollection(JinjaForNode loop, TemplateContext context,
                                      Set<String> inScope) {
         String collection = loop.getCollectionExpression();
@@ -421,7 +425,7 @@ public class SemanticAnalyzer {
         if (!inScope.contains(base) && !JINJA_BUILTINS.contains(base)) {
             report(Diagnostic.error(currentFile, loop.getLineNumber(),
                     "undefined-template-variable",
-                    "{% for ... in " + collection + " %} — '" + base
+                    "{% for ... in " + collection + " %} - '" + base
                             + "' is not passed to this template",
                     suggest(base, inScope)));
             return;
@@ -431,7 +435,7 @@ public class SemanticAnalyzer {
         if (value != null && !value.isList()) {
             report(Diagnostic.error(currentFile, loop.getLineNumber(),
                     "not-iterable",
-                    "{% for ... in " + collection + " %} — '" + collection
+                    "{% for ... in " + collection + " %} - '" + collection
                             + "' is not a list",
                     "it is " + describe(value)));
         }
@@ -442,8 +446,9 @@ public class SemanticAnalyzer {
         if (condition == null) {
             return;
         }
-        // Split on comparison operators; each side may be a literal or a name.
-        for (String operand : condition.split("==|!=|>=|<=|>|<")) {
+        // Split on the comparison and boolean operators; each remaining side is
+        // either a literal or a name that must be in scope.
+        for (String operand : condition.split("==|!=|>=|<=|>|<|\\band\\b|\\bor\\b|\\bnot\\b")) {
             String token = operand.trim();
             if (token.isEmpty() || isLiteral(token)) {
                 continue;
@@ -490,7 +495,7 @@ public class SemanticAnalyzer {
         if (!inScope.contains(base) && !JINJA_BUILTINS.contains(base)) {
             report(Diagnostic.error(currentFile, line,
                     "undefined-template-variable",
-                    "{{ " + expr + " }} — '" + base + "' is not passed to this template",
+                    "{{ " + expr + " }} - '" + base + "' is not passed to this template",
                     suggest(base, inScope)));
             return;
         }
@@ -514,6 +519,9 @@ public class SemanticAnalyzer {
 
         TemplateContext.Value value = context.get(base);
         if (value == null) {
+            if (context.getDeclaredNames().contains(base)) {
+                return; // the route passes it, but its value is not known at compile time
+            }
             // Probably a loop iterator: find a list in the context and use a row
             // as the shape. Ambiguous only if several lists are passed, in which
             // case any matching row is enough to accept the field.
@@ -527,7 +535,7 @@ public class SemanticAnalyzer {
             String field = expr.substring(dot + 1).split("\\.")[0];
             report(Diagnostic.error(currentFile, line,
                     "unknown-field",
-                    "{{ " + expr + " }} — no field '" + field + "' in the data",
+                    "{{ " + expr + " }} - no field '" + field + "' in the data",
                     suggest(field, fields)));
             return;
         }
@@ -543,7 +551,7 @@ public class SemanticAnalyzer {
             if (next == null) {
                 report(Diagnostic.error(currentFile, line,
                         "unknown-field",
-                        "{{ " + expr + " }} — '" + parts[i] + "' is not a field of '"
+                        "{{ " + expr + " }} - '" + parts[i] + "' is not a field of '"
                                 + parts[i - 1] + "'",
                         suggest(parts[i], current.getDict().keySet())));
                 return;

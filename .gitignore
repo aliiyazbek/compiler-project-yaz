@@ -37,3 +37,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+### Python bytecode from the sample app ###
+__pycache__/
+*.pyc

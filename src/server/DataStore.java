@@ -123,9 +123,15 @@ public class DataStore {
 
     /** The row whose "id" field matches, or null. */
     public synchronized Map<String, String> findById(String id) {
+        Map<String, String> row = findRow(id);
+        return row == null ? null : new LinkedHashMap<>(row);
+    }
+
+    /** The live row behind an id — callers must already hold the lock. */
+    private Map<String, String> findRow(String id) {
         for (Map<String, String> row : rows) {
             if (id != null && id.equals(row.get("id"))) {
-                return new LinkedHashMap<>(row);
+                return row;
             }
         }
         return null;
@@ -180,6 +186,31 @@ public class DataStore {
         }
         fireChanged("added " + collectionName + " row id=" + assignedId);
         return assignedId;
+    }
+
+    /**
+     * Overwrite the editable fields of one row.
+     *
+     * The id is the row's identity, not a field the form may change, so it is
+     * kept whatever the submission says. A field the form omits is left alone
+     * rather than blanked, so a partial form cannot erase data.
+     *
+     * @return true if a row with this id existed
+     */
+    public boolean update(String id, Map<String, String> submitted) {
+        synchronized (this) {
+            Map<String, String> row = findRow(id);
+            if (row == null) {
+                return false;
+            }
+            for (Map.Entry<String, String> entry : submitted.entrySet()) {
+                if (!"id".equals(entry.getKey())) {
+                    row.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        fireChanged("updated " + collectionName + " row id=" + id);
+        return true;
     }
 
     /** Remove the row with this id. Returns true if a row was actually removed. */

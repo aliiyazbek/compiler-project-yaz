@@ -5,7 +5,7 @@ options {
 }
 
 document
-    : jinjaExtendsStatement? DOCTYPE? content? EOF
+    : jinjaExtendsStatement? DOCTYPE? content EOF
     ;
 
 content
@@ -28,6 +28,7 @@ htmlElement
 tagName
     : IDENTIFIER
     | CSS_IDENT
+    | CSS_UNIT
     ;
 
 htmlAttribute
@@ -37,16 +38,21 @@ htmlAttribute
 attrName
     : IDENTIFIER
     | CSS_IDENT
+    | CSS_UNIT
+    | STYLE_TAG
     ;
 
 attrValue
     : STRING
     | IDENTIFIER
     | CSS_IDENT
+    | NUMBER
+    | CSS_UNIT
+    | STYLE_TAG
     ;
 
 styleElement
-    : TAG_OPEN STYLE_TAG TAG_CLOSE cssRule* TAG_OPEN TAG_SLASH STYLE_TAG TAG_CLOSE
+    : TAG_OPEN STYLE_TAG htmlAttribute* TAG_CLOSE cssRule* TAG_OPEN TAG_SLASH STYLE_TAG TAG_CLOSE
     ;
 
 cssRule
@@ -87,6 +93,7 @@ cssValue
     | HASH CSS_IDENT
     | HASH NUMBER
     | STRING
+    | COMMA
     ;
 
 jinjaExpression
@@ -136,7 +143,7 @@ jinjaExtendsStatement
 jinjaBlockStatement
     : JINJA_STMT_START JINJA_BLOCK IDENTIFIER JINJA_STMT_END
       content
-      JINJA_STMT_START JINJA_ENDBLOCK JINJA_STMT_END
+      JINJA_STMT_START JINJA_ENDBLOCK IDENTIFIER? JINJA_STMT_END
     ;
 
 jinjaCondition
@@ -159,4 +166,6 @@ text
     | NUMBER
     | IDENTIFIER
     | CSS_IDENT
+    | CSS_UNIT
+    | STYLE_TAG
     ;
