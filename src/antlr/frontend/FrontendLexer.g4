@@ -2,37 +2,14 @@ lexer grammar FrontendLexer;
 
 DOCTYPE: '<!DOCTYPE' [ ]+ 'html>';
 
-JINJA_EXPR_START: '{{';
-JINJA_EXPR_END: '}}';
-JINJA_STMT_START: '{%';
-JINJA_STMT_END: '%}';
+JINJA_EXPR_START: '{{' -> pushMode(JINJA);
+JINJA_STMT_START: '{%' -> pushMode(JINJA);
 JINJA_COMMENT: '{#' .*? '#}' -> skip;
-
-JINJA_IF: 'if';
-JINJA_ELIF: 'elif';
-JINJA_ELSE: 'else';
-JINJA_ENDIF: 'endif';
-JINJA_FOR: 'for';
-JINJA_IN: 'in';
-JINJA_ENDFOR: 'endfor';
-JINJA_EXTENDS: 'extends';
-JINJA_BLOCK: 'block';
-JINJA_ENDBLOCK: 'endblock';
 
 TAG_OPEN: '<';
 TAG_CLOSE: '>';
 TAG_SLASH: '/';
 STYLE_TAG: 'style';
-
-JINJA_EQ: '==';
-JINJA_NEQ: '!=';
-JINJA_LTE: '<=';
-JINJA_GTE: '>=';
-JINJA_LT: '<';
-JINJA_GT: '>';
-JINJA_AND: 'and';
-JINJA_OR: 'or';
-JINJA_NOT: 'not';
 
 CSS_LBRACE: '{';
 CSS_RBRACE: '}';
@@ -63,3 +40,48 @@ WS: [ \t\r\n]+ -> skip;
 
 HTML_COMMENT: '<!--' .*? '-->' -> skip;
 CSS_COMMENT: '/*' .*? '*/' -> skip;
+
+
+mode JINJA;
+
+JINJA_EXPR_END: '}}' -> popMode;
+JINJA_STMT_END: '%}' -> popMode;
+
+JINJA_IF: 'if';
+JINJA_ELIF: 'elif';
+JINJA_ELSE: 'else';
+JINJA_ENDIF: 'endif';
+JINJA_FOR: 'for';
+JINJA_IN: 'in';
+JINJA_ENDFOR: 'endfor';
+JINJA_EXTENDS: 'extends';
+JINJA_BLOCK: 'block';
+JINJA_ENDBLOCK: 'endblock';
+
+JINJA_EQ: '==';
+JINJA_NEQ: '!=';
+JINJA_LTE: '<=';
+JINJA_GTE: '>=';
+JINJA_LT: '<';
+JINJA_GT: '>';
+JINJA_AND: 'and';
+JINJA_OR: 'or';
+JINJA_NOT: 'not';
+
+J_DOT: '.' -> type(DOT);
+J_LBRACKET: '[' -> type(LBRACKET);
+J_RBRACKET: ']' -> type(RBRACKET);
+J_COMMA: ',' -> type(COMMA);
+
+J_STRING: '"' (~["\r\n\\] | '\\' .)* '"' -> type(STRING);
+J_STRING_SQ: '\'' (~['\r\n\\] | '\\' .)* '\'' -> type(STRING);
+
+J_NUMBER: [0-9]+ ('.' [0-9]+)? -> type(NUMBER);
+
+J_IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]* -> type(IDENTIFIER);
+
+J_WS: [ \t\r\n]+ -> skip;
+
+J_JINJA_COMMENT: '{#' .*? '#}' -> skip;
+J_HTML_COMMENT: '<!--' .*? '-->' -> skip;
+J_CSS_COMMENT: '/*' .*? '*/' -> skip;

@@ -260,6 +260,7 @@ public class ContextBuilder {
                 if (value != null) {
                     context.put(argument.getName(), value);
                 } else {
+                    context.declare(argument.getName());
                     log.add("  ! " + functionName + ": could not evaluate '"
                             + argument.getName() + "'; it will render as empty.");
                 }
@@ -271,8 +272,14 @@ public class ContextBuilder {
         }
 
         // A template rendered from more than one route keeps its first context;
-        // re-rendering it per route would need one output file per route.
+        // re-rendering it per route would need one output file per route. The
+        // later route's variable names are still folded in, so a name only that
+        // route passes is not reported as missing.
         if (contexts.containsKey(templateName)) {
+            TemplateContext existing = contexts.get(templateName);
+            for (String name : context.getDeclaredNames()) {
+                existing.declare(name);
+            }
             log.add("  ~ " + templateName + " is rendered by more than one route; "
                     + "keeping the context from the first (" + functionName + " is a later one).");
             return;

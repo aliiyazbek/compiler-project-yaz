@@ -27,7 +27,7 @@ public class HtmlElementNode extends ASTNode {
             return String.format("[Line %d] %s: <%s />",
                     lineNumber, nodeName, tagName);
         } else {
-            return String.format("[Line %d] %s: <%s>...<%s>",
+            return String.format("[Line %d] %s: <%s>...</%s>",
                     lineNumber, nodeName, tagName, tagName);
         }
     }

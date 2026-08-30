@@ -109,7 +109,7 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
 
         ASTNode funcNode = visit(ctx.functionDefinition());
 
-        ProgramNode wrapper = new ProgramNode(line);
+        DecoratedFunctionNode wrapper = new DecoratedFunctionNode(line);
 
         for (PythonFlaskParser.DecoratorContext decCtx : ctx.decorator()) {
             String decoratorText = decCtx.getText().substring(1);
@@ -210,12 +210,7 @@ public class BackendASTVisitor extends PythonFlaskParserBaseVisitor<ASTNode> {
             forNode.addChild(iterableExpr);
         }
 
-        for (PythonFlaskParser.StatementContext stmtCtx : ctx.statement()) {
-            ASTNode stmtNode = visit(stmtCtx);
-            if (stmtNode != null) {
-                forNode.addChild(stmtNode);
-            }
-        }
+        forNode.addChild(buildBlock(line, "body", ctx.statement()));
 
         return forNode;
     }

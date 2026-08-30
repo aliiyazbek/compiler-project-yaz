@@ -123,6 +123,12 @@ public class AppServer {
             return;
         }
 
+        String editId = idAfter(path, "/edit/");
+        if (editId != null) {
+            sendRenderedForId(exchange, "edit_product.html", editId);
+            return;
+        }
+
         String deleteId = idAfter(path, "/delete/");
         if (deleteId != null) {
             sendRenderedForId(exchange, "delete_confirm.html", deleteId);
@@ -150,6 +156,16 @@ public class AppServer {
             String id = store.add(form);
             System.out.println("  [server] added row id=" + id + "; site re-rendered.");
             redirect(exchange, "/");
+            return;
+        }
+
+        String editId = idAfter(path, "/edit/");
+        if (editId != null) {
+            Map<String, String> form = parseForm(readBody(exchange));
+            boolean updated = store.update(editId, form);
+            System.out.println("  [server] edit id=" + editId
+                    + (updated ? "; site re-rendered." : " - no such row."));
+            redirect(exchange, updated ? "/product/" + editId : "/");
             return;
         }
 

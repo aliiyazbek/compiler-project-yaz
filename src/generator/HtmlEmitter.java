@@ -393,13 +393,25 @@ public class HtmlEmitter {
         emitChildren(body, ctx, depth, true);
     }
 
+    /**
+     * Emit the first branch whose test holds, and only that one.
+     *
+     * An {@code else} arm carries no condition and therefore always matches,
+     * which is what makes it the fallback when every earlier arm failed.
+     */
     private void emitIf(JinjaIfNode ifNode, TemplateContext ctx, int depth) {
-        if (evaluateCondition(ifNode.getCondition(), ctx)) {
-            conditionsTaken++;
-            emitChildren(ifNode, ctx, depth, true);
-        } else {
+        for (ASTNode child : ifNode.getChildren()) {
+            if (!(child instanceof JinjaBranchNode)) {
+                continue;
+            }
+            JinjaBranchNode branch = (JinjaBranchNode) child;
+            if (branch.isElse() || evaluateCondition(branch.getCondition(), ctx)) {
+                conditionsTaken++;
+                emitChildren(branch, ctx, depth, true);
+                return;
+            }
             conditionsSkipped++;
-            log.add("  condition '" + ifNode.getCondition()
+            log.add("  condition '" + branch.getCondition()
                     + "' was false; that branch was not emitted.");
         }
     }
@@ -484,6 +496,23 @@ public class HtmlEmitter {
         }
         String expr = condition.trim();
 
+        // Lowest precedence first, so `a and b or c` groups as `(a and b) or c`.
+        int or = findOperator(expr, "or");
+        if (or >= 0) {
+            return evaluateCondition(expr.substring(0, or), ctx)
+                    || evaluateCondition(expr.substring(or + 2), ctx);
+        }
+
+        int and = findOperator(expr, "and");
+        if (and >= 0) {
+            return evaluateCondition(expr.substring(0, and), ctx)
+                    && evaluateCondition(expr.substring(and + 3), ctx);
+        }
+
+        if (expr.startsWith("not ")) {
+            return !evaluateCondition(expr.substring(4), ctx);
+        }
+
         String[] operators = {"==", "!=", ">=", "<=", ">", "<"};
         for (String op : operators) {
             int at = expr.indexOf(op);
@@ -516,6 +545,40 @@ public class HtmlEmitter {
 
         TemplateContext.Value value = ctx.resolve(expr);
         return value != null && value.isTruthy();
+    }
+
+    /**
+     * Where a boolean keyword appears as a word of its own, or -1.
+     *
+     * Matching the bare substring would find the "or" inside "author" and the
+     * "and" inside a quoted string, so a match must be delimited on both sides
+     * and must not fall inside a literal.
+     */
+    private int findOperator(String expr, String keyword) {
+        char quote = 0;
+        for (int i = 0; i + keyword.length() <= expr.length(); i++) {
+            char c = expr.charAt(i);
+            if (quote != 0) {
+                if (c == quote) {
+                    quote = 0;
+                }
+                continue;
+            }
+            if (c == '"' || c == '\'') {
+                quote = c;
+                continue;
+            }
+            if (!expr.startsWith(keyword, i)) {
+                continue;
+            }
+            boolean beforeOk = i > 0 && Character.isWhitespace(expr.charAt(i - 1));
+            int after = i + keyword.length();
+            boolean afterOk = after < expr.length() && Character.isWhitespace(expr.charAt(after));
+            if (beforeOk && afterOk) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /** A condition operand is either a literal or a context path. */

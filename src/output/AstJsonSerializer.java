@@ -7,8 +7,8 @@ import ast.frontend.*;
 /**
  * Serialises any AST produced by this compiler into JSON.
  *
- * Every node contributes the three fields it has by virtue of being an
- * {@link ASTNode} — {@code node}, {@code line} and (when non-empty)
+ * Every node contributes the four fields it has by virtue of being an
+ * {@link ASTNode} — {@code id}, {@code node}, {@code line} and (when non-empty)
  * {@code children}. On top of that, each concrete node type contributes the
  * attributes that actually carry its meaning (a {@code HtmlElement}'s tag name,
  * a {@code JinjaFor}'s iterator and collection, an {@code Assignment}'s target
@@ -76,6 +76,7 @@ public class AstJsonSerializer {
 
     private static void writeNode(JsonWriter w, ASTNode node) {
         w.beginArrayElement();
+        w.field("id", node.getNodeId());
         w.field("node", node.getNodeName());
         w.field("line", node.getLineNumber());
         writeAttributes(w, node);
@@ -118,6 +119,13 @@ public class AstJsonSerializer {
 
         } else if (node instanceof JinjaIfNode) {
             w.field("condition", ((JinjaIfNode) node).getCondition());
+
+        } else if (node instanceof JinjaBranchNode) {
+            JinjaBranchNode n = (JinjaBranchNode) node;
+            w.field("branch", n.getKeyword());
+            if (n.getCondition() != null) {
+                w.field("condition", n.getCondition());
+            }
 
         } else if (node instanceof JinjaBlockNode) {
             w.field("block", ((JinjaBlockNode) node).getBlockName());

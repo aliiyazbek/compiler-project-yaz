@@ -4,6 +4,10 @@ import antlr.frontend.*;
 import ast.base.ASTNode;
 import ast.frontend.*;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Interval;
+
 public class FrontendASTVisitor extends FrontendParserBaseVisitor<ASTNode> {
 
     @Override
@@ -147,40 +151,63 @@ public class FrontendASTVisitor extends FrontendParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitJinjaIfStatement(FrontendParser.JinjaIfStatementContext ctx) {
         int line = ctx.start.getLine();
-        String condition = ctx.jinjaCondition().getText();
+        String condition = sourceText(ctx.jinjaCondition());
 
         JinjaIfNode ifNode = new JinjaIfNode(line, condition);
-
-        if (ctx.content() != null) {
-            ASTNode contentNode = visit(ctx.content());
-            if (contentNode != null && contentNode.getChildren() != null) {
-                ifNode.addChildren(contentNode.getChildren());
-            }
-        }
+        ifNode.addChild(branch(line, "if", condition, ctx.content()));
 
         for (FrontendParser.JinjaElifStatementContext elifCtx : ctx.jinjaElifStatement()) {
-            if (elifCtx.content() != null) {
-                ASTNode elifContent = visit(elifCtx.content());
-                if (elifContent != null && elifContent.getChildren() != null) {
-                    ifNode.addChildren(elifContent.getChildren());
-                }
-            }
+            ifNode.addChild(branch(elifCtx.start.getLine(), "elif",
+                    sourceText(elifCtx.jinjaCondition()), elifCtx.content()));
         }
 
-        if (ctx.jinjaElseStatement() != null && ctx.jinjaElseStatement().content() != null) {
-            ASTNode elseContent = visit(ctx.jinjaElseStatement().content());
-            if (elseContent != null && elseContent.getChildren() != null) {
-                ifNode.addChildren(elseContent.getChildren());
-            }
+        FrontendParser.JinjaElseStatementContext elseCtx = ctx.jinjaElseStatement();
+        if (elseCtx != null) {
+            ifNode.addChild(branch(elseCtx.start.getLine(), "else", null, elseCtx.content()));
         }
 
         return ifNode;
     }
 
+    /** Wrap one arm's content in its own branch node. */
+    private JinjaBranchNode branch(int line, String keyword, String condition,
+                                   FrontendParser.ContentContext content) {
+        JinjaBranchNode node = new JinjaBranchNode(line, keyword, condition);
+        if (content != null) {
+            ASTNode visited = visit(content);
+            if (visited != null && visited.getChildren() != null) {
+                node.addChildren(visited.getChildren());
+            }
+        }
+        return node;
+    }
+
+    /**
+     * The rule's text as it appears in the source, whitespace included.
+     *
+     * {@code ParserRuleContext.getText()} concatenates token text, which turns
+     * {@code total and products} into {@code totalandproducts} and makes the
+     * operators unrecoverable. Reading the original character interval keeps the
+     * condition in a form that can still be parsed back apart.
+     */
+    private String sourceText(ParserRuleContext ctx) {
+        if (ctx == null) {
+            return "";
+        }
+        Token start = ctx.getStart();
+        Token stop = ctx.getStop();
+        if (start == null || stop == null || stop.getStopIndex() < start.getStartIndex()) {
+            return ctx.getText();
+        }
+        return start.getInputStream()
+                .getText(Interval.of(start.getStartIndex(), stop.getStopIndex()))
+                .trim();
+    }
+
     @Override
     public ASTNode visitJinjaBlockStatement(FrontendParser.JinjaBlockStatementContext ctx) {
         int line = ctx.start.getLine();
-        String blockName = ctx.IDENTIFIER().getText();
+        String blockName = ctx.IDENTIFIER(0).getText();
 
         JinjaBlockNode blockNode = new JinjaBlockNode(line, blockName);
 
@@ -250,10 +277,13 @@ public class FrontendASTVisitor extends FrontendParserBaseVisitor<ASTNode> {
 
         StringBuilder valueBuilder = new StringBuilder();
         for (FrontendParser.CssValueContext valueCtx : ctx.cssValue()) {
-            if (valueBuilder.length() > 0) {
+            String piece = valueCtx.getText();
+            // A comma binds to the value before it: "Arial, sans-serif", not
+            // "Arial , sans-serif".
+            if (valueBuilder.length() > 0 && !piece.equals(",")) {
                 valueBuilder.append(" ");
             }
-            valueBuilder.append(valueCtx.getText());
+            valueBuilder.append(piece);
         }
         String value = valueBuilder.toString();
 
